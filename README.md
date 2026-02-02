@@ -162,17 +162,61 @@ vercel --prod
 
 ## 🐛 故障排除
 
-**问题：部署失败**
-- 检查 `vercel.json` 格式是否正确
-- 确保 Python 代码没有语法错误
+**问题：部署后访问显示 404 NOT_FOUND**
+
+这是最常见的问题，解决方法：
+
+1. **检查文件结构**
+   确保项目根目录有 `index.html` 文件：
+   ```
+   fund-tracker-vercel/
+   ├── api/
+   │   └── fund.py
+   ├── index.html       ← 必须在根目录
+   ├── vercel.json
+   └── requirements.txt
+   ```
+
+2. **重新部署**
+   ```bash
+   # 删除 .vercel 目录
+   rm -rf .vercel
+   
+   # 重新部署
+   vercel --prod
+   ```
+
+3. **通过 Vercel Dashboard 检查**
+   - 登录 https://vercel.com
+   - 进入你的项目
+   - 查看 "Deployments" 标签
+   - 点击最新部署，查看 "Source" 确认文件是否正确上传
+
+4. **确认 vercel.json 配置**
+   应该使用简化的配置：
+   ```json
+   {
+     "rewrites": [
+       {
+         "source": "/api/fund",
+         "destination": "/api/fund.py"
+       }
+     ]
+   }
+   ```
 
 **问题：API 返回 500 错误**
 - 查看 Vercel 控制台的 Function Logs
-- 检查基金代码是否正确
+- 检查基金代码是否正确（必须是6位数字）
 
 **问题：CORS 错误**
 - API 已配置 CORS 允许所有来源
 - 如果仍有问题，检查浏览器控制台错误信息
+
+**问题：基金数据加载失败**
+- 确认输入的是正确的6位基金代码
+- 新基金（成立不到3个月）可能暂无实时估值数据
+- 先用 161725、110011 等老基金测试
 
 ## 📞 技术支持
 
