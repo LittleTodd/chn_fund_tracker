@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,7 +28,7 @@
             background: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
         }
 
@@ -47,7 +48,7 @@
             background: white;
             padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
         }
 
@@ -118,7 +119,7 @@
             background: white;
             border-radius: 15px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             position: relative;
             transition: transform 0.3s;
         }
@@ -212,7 +213,7 @@
             padding: 60px 20px;
             border-radius: 15px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .empty-state p {
@@ -241,8 +242,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .popular-funds {
@@ -269,17 +275,19 @@
             .fund-list {
                 grid-template-columns: 1fr;
             }
-            
+
             .input-group {
                 flex-direction: column;
             }
-            
-            input[type="text"], button {
+
+            input[type="text"],
+            button {
                 width: 100%;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -293,7 +301,7 @@
                 <button onclick="addFund()">添加基金</button>
                 <button onclick="refreshAll()">刷新全部</button>
             </div>
-            
+
             <div class="auto-refresh">
                 <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
                 <label for="autoRefresh">自动刷新（每30秒）</label>
@@ -339,7 +347,7 @@
         function addFund() {
             const input = document.getElementById('fundCodeInput');
             const code = input.value.trim();
-            
+
             if (!code) {
                 alert('请输入基金代码');
                 return;
@@ -358,7 +366,7 @@
             funds.push(code);
             saveFunds();
             input.value = '';
-            renderFunds();
+            appendFundCard(code);  // 只添加新卡片，不重新渲染全部
             fetchFundData(code);
         }
 
@@ -370,8 +378,36 @@
             }
             funds.push(code);
             saveFunds();
-            renderFunds();
+            appendFundCard(code);  // 只添加新卡片，不重新渲染全部
             fetchFundData(code);
+        }
+
+        // 追加单个基金卡片（不影响已有卡片）
+        function appendFundCard(code) {
+            const container = document.getElementById('fundList');
+
+            // 如果是空状态，先清除空状态提示
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) {
+                container.innerHTML = '';
+            }
+
+            // 创建新卡片
+            const cardHTML = `
+                <div class="fund-card loading" id="fund-${code}">
+                    <div class="fund-header">
+                        <div>
+                            <div class="fund-name">加载中...</div>
+                            <div class="fund-code">${code}</div>
+                        </div>
+                        <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                    </div>
+                    <div class="fund-data">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHTML);
         }
 
         // 删除基金
@@ -384,7 +420,7 @@
         // 渲染基金列表
         function renderFunds() {
             const container = document.getElementById('fundList');
-            
+
             if (funds.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>暂无基金数据，请添加基金代码开始查询</p></div>';
                 return;
@@ -414,13 +450,13 @@
             try {
                 const response = await fetch(`${API_BASE}?code=${code}`);
                 const result = await response.json();
-                
+
                 if (result.success && result.data) {
                     updateFundCard(code, result.data);
                 } else {
                     showError(code, result.error || '数据加载失败');
                 }
-                
+
             } catch (error) {
                 console.error('Fetch error:', error);
                 showError(code, '网络错误，请稍后重试');
@@ -497,7 +533,7 @@
         // 切换自动刷新
         function toggleAutoRefresh() {
             const checkbox = document.getElementById('autoRefresh');
-            
+
             if (checkbox.checked) {
                 autoRefreshInterval = setInterval(refreshAll, 30000);
                 refreshAll();
@@ -510,23 +546,24 @@
         }
 
         // 回车键添加
-        document.getElementById('fundCodeInput').addEventListener('keypress', function(e) {
+        document.getElementById('fundCodeInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 addFund();
             }
         });
 
         // 页面加载时初始化
-        window.onload = function() {
+        window.onload = function () {
             loadFunds();
         };
 
         // 页面关闭时清理
-        window.onbeforeunload = function() {
+        window.onbeforeunload = function () {
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
             }
         };
     </script>
 </body>
+
 </html>
