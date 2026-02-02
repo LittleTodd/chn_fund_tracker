@@ -4,8 +4,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基金实时估值查询</title>
+    <title>基金估值 - 实时净值查询</title>
+    <meta name="description" content="基金实时估值查询工具，快速追踪您关注的基金净值和涨跌幅">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ===== CSS 变量定义 ===== */
+        :root {
+            --bg-primary: #F8F9FA;
+            --bg-card: #FFFFFF;
+            --bg-hover: #F1F3F4;
+            --bg-input: #FFFFFF;
+            --border-color: #E5E7EB;
+            --border-focus: #2563EB;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --color-up: #DC2626;
+            --color-up-bg: #FEF2F2;
+            --color-down: #16A34A;
+            --color-down-bg: #F0FDF4;
+            --color-accent: #2563EB;
+            --color-accent-hover: #1D4ED8;
+            --color-danger: #EF4444;
+            --color-danger-hover: #DC2626;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.2s ease;
+        }
+
+        /* ===== 基础重置 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -13,276 +46,589 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
+        /* ===== 布局容器 ===== */
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
+            padding: 24px 20px;
         }
 
+        /* ===== Header 组件 ===== */
         .header {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .disclaimer {
-            color: #666;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        .input-section {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            min-width: 200px;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        button {
-            padding: 12px 25px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-            font-weight: 500;
-        }
-
-        button:hover {
-            background: #5568d3;
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .auto-refresh {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: #666;
-            margin-top: 10px;
-        }
-
-        .auto-refresh input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .fund-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        .fund-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            position: relative;
-            transition: transform 0.3s;
-        }
-
-        .fund-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .fund-card.loading {
-            opacity: 0.6;
-        }
-
-        .fund-header {
-            display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .fund-name {
-            font-size: 18px;
+        .header-left {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .refresh-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+
+        .refresh-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .auto-refresh-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .auto-refresh-toggle input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--color-accent);
+        }
+
+        /* ===== 输入区组件 ===== */
+        .input-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .fund-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-family: inherit;
+            color: var(--text-primary);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .fund-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .fund-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .add-btn {
+            padding: 12px 24px;
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-            word-break: break-all;
-        }
-
-        .fund-code {
-            font-size: 14px;
-            color: #999;
-        }
-
-        .delete-btn {
-            background: #ff4757;
-            padding: 6px 12px;
-            font-size: 14px;
-            border-radius: 6px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background var(--transition-fast), transform var(--transition-fast);
             white-space: nowrap;
         }
 
-        .delete-btn:hover {
-            background: #ee2e3a;
+        .add-btn:hover {
+            background: var(--color-accent-hover);
         }
 
-        .fund-data {
-            margin-top: 15px;
+        .add-btn:active {
+            transform: scale(0.98);
         }
 
-        .data-row {
+        /* ===== 热门基金标签 ===== */
+        .popular-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .popular-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .popular-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .popular-tag {
+            padding: 6px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .popular-tag:hover {
+            background: var(--bg-hover);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        .popular-tag .code {
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        /* ===== 基金列表 ===== */
+        .fund-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        /* ===== 基金卡片组件 ===== */
+        .fund-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+        }
+
+        .fund-card:hover {
+            border-color: var(--text-muted);
+            box-shadow: var(--shadow-md);
+        }
+
+        .fund-card.loading {
+            opacity: 0.7;
+        }
+
+        .card-header {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
+            align-items: flex-start;
+            margin-bottom: 16px;
         }
 
-        .data-row:last-child {
-            border-bottom: none;
+        .fund-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fund-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fund-code {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-feature-settings: "tnum";
+        }
+
+        .delete-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .delete-btn:hover {
+            background: var(--color-up-bg);
+            color: var(--color-danger);
+        }
+
+        .delete-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ===== 核心数据区 ===== */
+        .core-data {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-block {
+            display: flex;
+            flex-direction: column;
         }
 
         .data-label {
-            color: #666;
-            font-size: 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 500;
         }
 
         .data-value {
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 700;
+            font-feature-settings: "tnum";
+            letter-spacing: -0.5px;
+        }
+
+        .change-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 18px;
+            font-weight: 700;
+            font-feature-settings: "tnum";
+        }
+
+        .change-badge.up {
+            background: var(--color-up-bg);
+            color: var(--color-up);
+        }
+
+        .change-badge.down {
+            background: var(--color-down-bg);
+            color: var(--color-down);
+        }
+
+        .change-badge.neutral {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+
+        /* ===== 次要信息 ===== */
+        .secondary-data {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .secondary-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .secondary-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .secondary-value {
             font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-feature-settings: "tnum";
         }
 
-        .positive {
-            color: #ff4757;
-        }
-
-        .negative {
-            color: #2ecc71;
-        }
-
-        .neutral {
-            color: #666;
-        }
-
+        /* ===== 更新时间 ===== */
         .update-time {
-            font-size: 12px;
-            color: #999;
-            margin-top: 10px;
+            font-size: 11px;
+            color: var(--text-muted);
             text-align: right;
         }
 
-        .empty-state {
-            background: white;
-            padding: 60px 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .empty-state p {
-            color: #999;
-            font-size: 16px;
-        }
-
-        .error-message {
-            background: #ff4757;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 14px;
-            word-break: break-word;
+        /* ===== 加载状态 ===== */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
         }
 
         .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            width: 24px;
+            height: 24px;
+            border: 2.5px solid var(--border-color);
+            border-top-color: var(--color-accent);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
+        .loading-text {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
 
-            100% {
+        /* ===== 错误状态 ===== */
+        .error-state {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .error-message {
+            font-size: 13px;
+            color: var(--color-danger);
+            margin-bottom: 12px;
+        }
+
+        .retry-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .retry-btn:hover {
+            background: var(--color-accent-hover);
+        }
+
+        /* ===== 空状态 ===== */
+        .empty-state {
+            grid-column: 1 / -1;
+            background: var(--bg-card);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: var(--bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-icon svg {
+            width: 32px;
+            height: 32px;
+            color: var(--text-muted);
+        }
+
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ===== 动画定义 ===== */
+        @keyframes spin {
+            to {
                 transform: rotate(360deg);
             }
         }
 
-        .popular-funds {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .popular-funds span {
-            display: inline-block;
-            background: #f0f0f0;
-            padding: 5px 10px;
-            margin: 5px 5px 0 0;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .popular-funds span:hover {
-            background: #e0e0e0;
-        }
-
-        @media (max-width: 768px) {
-            .fund-list {
-                grid-template-columns: 1fr;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
             }
 
-            .input-group {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .refreshing .data-value,
+        .refreshing .change-badge {
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        /* ===== 响应式适配 ===== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .input-row {
                 flex-direction: column;
             }
 
-            input[type="text"],
-            button {
+            .add-btn {
                 width: 100%;
+            }
+
+            .fund-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .core-data {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .data-value {
+                font-size: 24px;
+            }
+
+            .change-badge {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .popular-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .secondary-data {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .secondary-item {
+                min-width: 45%;
             }
         }
     </style>
@@ -290,37 +636,77 @@
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📊 基金实时估值查询</h1>
-            <p class="disclaimer">⚠️ 数据来源：天天基金网 | 估值数据仅供参考，不构成投资建议</p>
-        </div>
-
-        <div class="input-section">
-            <div class="input-group">
-                <input type="text" id="fundCodeInput" placeholder="请输入基金代码（如：161725）" maxlength="6">
-                <button onclick="addFund()">添加基金</button>
-                <button onclick="refreshAll()">刷新全部</button>
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="logo">基金估值</h1>
+                <span class="logo-sub">实时净值查询</span>
             </div>
-
-            <div class="auto-refresh">
-                <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
-                <label for="autoRefresh">自动刷新（每30秒）</label>
+            <div class="header-right">
+                <label class="auto-refresh-toggle">
+                    <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                    <span>自动刷新</span>
+                </label>
+                <button class="refresh-btn" onclick="refreshAll()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                        <path d="M16 16h5v5" />
+                    </svg>
+                    <span>刷新</span>
+                </button>
             </div>
+        </header>
 
-            <div class="popular-funds">
-                <strong>热门基金：</strong>
-                <span onclick="quickAdd('161725')">161725 招商白酒</span>
-                <span onclick="quickAdd('110011')">110011 易方达中小盘</span>
-                <span onclick="quickAdd('000001')">000001 华夏成长</span>
-                <span onclick="quickAdd('320007')">320007 诺安成长</span>
+        <!-- Input Section -->
+        <section class="input-section">
+            <div class="input-row">
+                <div class="input-wrapper">
+                    <input type="text" id="fundCodeInput" class="fund-input" placeholder="输入6位基金代码，如 161725"
+                        maxlength="6">
+                </div>
+                <button class="add-btn" onclick="addFund()">添加基金</button>
             </div>
-        </div>
+            <div class="popular-section">
+                <span class="popular-label">热门基金</span>
+                <div class="popular-tags">
+                    <span class="popular-tag" onclick="quickAdd('161725')">
+                        <span class="code">161725</span>白酒
+                    </span>
+                    <span class="popular-tag" onclick="quickAdd('110011')">
+                        <span class="code">110011</span>中小盘
+                    </span>
+                    <span class="popular-tag" onclick="quickAdd('000001')">
+                        <span class="code">000001</span>华夏成长
+                    </span>
+                    <span class="popular-tag" onclick="quickAdd('320007')">
+                        <span class="code">320007</span>诺安成长
+                    </span>
+                </div>
+            </div>
+        </section>
 
-        <div id="fundList" class="fund-list">
+        <!-- Fund List -->
+        <div id="fundList" class="fund-grid">
             <div class="empty-state">
-                <p>暂无基金数据，请添加基金代码开始查询</p>
+                <div class="empty-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="m19 9-5 5-4-4-3 3" />
+                    </svg>
+                </div>
+                <h3 class="empty-title">暂无基金数据</h3>
+                <p class="empty-desc">输入基金代码或点击热门基金开始追踪</p>
             </div>
         </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-text">数据来源：天天基金网 · 估值数据仅供参考，不构成投资建议</p>
+        </footer>
     </div>
 
     <script>
@@ -366,7 +752,7 @@
             funds.push(code);
             saveFunds();
             input.value = '';
-            appendFundCard(code);  // 只添加新卡片，不重新渲染全部
+            appendFundCard(code);
             fetchFundData(code);
         }
 
@@ -378,32 +764,37 @@
             }
             funds.push(code);
             saveFunds();
-            appendFundCard(code);  // 只添加新卡片，不重新渲染全部
+            appendFundCard(code);
             fetchFundData(code);
         }
 
-        // 追加单个基金卡片（不影响已有卡片）
+        // 追加单个基金卡片
         function appendFundCard(code) {
             const container = document.getElementById('fundList');
 
-            // 如果是空状态，先清除空状态提示
+            // 清除空状态
             const emptyState = container.querySelector('.empty-state');
             if (emptyState) {
                 container.innerHTML = '';
             }
 
-            // 创建新卡片
             const cardHTML = `
                 <div class="fund-card loading" id="fund-${code}">
-                    <div class="fund-header">
-                        <div>
+                    <div class="card-header">
+                        <div class="fund-info">
                             <div class="fund-name">加载中...</div>
                             <div class="fund-code">${code}</div>
                         </div>
-                        <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                        <button class="delete-btn" onclick="removeFund('${code}')" title="删除">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
                     </div>
-                    <div class="fund-data">
+                    <div class="loading-state">
                         <div class="loading-spinner"></div>
+                        <span class="loading-text">正在获取数据...</span>
                     </div>
                 </div>
             `;
@@ -415,17 +806,33 @@
             funds = funds.filter(f => f !== code);
             saveFunds();
 
-            // 只移除对应的卡片，不重新渲染整个列表
             const card = document.getElementById(`fund-${code}`);
             if (card) {
-                card.remove();
+                card.style.animation = 'fadeOut 0.2s ease-out forwards';
+                setTimeout(() => {
+                    card.remove();
+                    if (funds.length === 0) {
+                        showEmptyState();
+                    }
+                }, 200);
             }
+        }
 
-            // 如果没有基金了，显示空状态
-            if (funds.length === 0) {
-                const container = document.getElementById('fundList');
-                container.innerHTML = '<div class="empty-state"><p>暂无基金数据，请添加基金代码开始查询</p></div>';
-            }
+        // 显示空状态
+        function showEmptyState() {
+            const container = document.getElementById('fundList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="m19 9-5 5-4-4-3 3"/>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">暂无基金数据</h3>
+                    <p class="empty-desc">输入基金代码或点击热门基金开始追踪</p>
+                </div>
+            `;
         }
 
         // 渲染基金列表
@@ -433,21 +840,27 @@
             const container = document.getElementById('fundList');
 
             if (funds.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p>暂无基金数据，请添加基金代码开始查询</p></div>';
+                showEmptyState();
                 return;
             }
 
             container.innerHTML = funds.map(code => `
                 <div class="fund-card loading" id="fund-${code}">
-                    <div class="fund-header">
-                        <div>
+                    <div class="card-header">
+                        <div class="fund-info">
                             <div class="fund-name">加载中...</div>
                             <div class="fund-code">${code}</div>
                         </div>
-                        <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                        <button class="delete-btn" onclick="removeFund('${code}')" title="删除">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
                     </div>
-                    <div class="fund-data">
+                    <div class="loading-state">
                         <div class="loading-spinner"></div>
+                        <span class="loading-text">正在获取数据...</span>
                     </div>
                 </div>
             `).join('');
@@ -480,39 +893,58 @@
             if (!card) return;
 
             card.classList.remove('loading');
+            card.classList.add('refreshing');
 
             const changePercent = parseFloat(data.gszzl);
-            const changeClass = changePercent > 0 ? 'positive' : changePercent < 0 ? 'negative' : 'neutral';
-            const changeSymbol = changePercent > 0 ? '+' : '';
+            let changeClass = 'neutral';
+            let changeSymbol = '';
+
+            if (changePercent > 0) {
+                changeClass = 'up';
+                changeSymbol = '+';
+            } else if (changePercent < 0) {
+                changeClass = 'down';
+            }
 
             card.innerHTML = `
-                <div class="fund-header">
-                    <div>
-                        <div class="fund-name">${data.name}</div>
+                <div class="card-header">
+                    <div class="fund-info">
+                        <div class="fund-name" title="${data.name}">${data.name}</div>
                         <div class="fund-code">${data.fundcode}</div>
                     </div>
-                    <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                    <button class="delete-btn" onclick="removeFund('${code}')" title="删除">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
                 </div>
-                <div class="fund-data">
-                    <div class="data-row">
+                <div class="core-data">
+                    <div class="data-block">
                         <span class="data-label">估算净值</span>
-                        <span class="data-value ${changeClass}">${data.gsz}</span>
+                        <span class="data-value">${data.gsz}</span>
                     </div>
-                    <div class="data-row">
-                        <span class="data-label">估算涨跌</span>
-                        <span class="data-value ${changeClass}">${changeSymbol}${data.gszzl}%</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">昨日净值</span>
-                        <span class="data-value">${data.dwjz}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">净值日期</span>
-                        <span class="data-value">${data.jzrq}</span>
+                    <div class="change-badge ${changeClass}">
+                        ${changeSymbol}${data.gszzl}%
                     </div>
                 </div>
-                <div class="update-time">更新时间：${data.gztime}</div>
+                <div class="secondary-data">
+                    <div class="secondary-item">
+                        <span class="secondary-label">昨日净值</span>
+                        <span class="secondary-value">${data.dwjz}</span>
+                    </div>
+                    <div class="secondary-item">
+                        <span class="secondary-label">净值日期</span>
+                        <span class="secondary-value">${data.jzrq}</span>
+                    </div>
+                </div>
+                <div class="update-time">更新于 ${data.gztime}</div>
             `;
+
+            // 移除刷新动画类
+            setTimeout(() => {
+                card.classList.remove('refreshing');
+            }, 600);
         }
 
         // 显示错误
@@ -522,16 +954,21 @@
 
             card.classList.remove('loading');
             card.innerHTML = `
-                <div class="fund-header">
-                    <div>
-                        <div class="fund-name">⚠️ 加载失败</div>
+                <div class="card-header">
+                    <div class="fund-info">
+                        <div class="fund-name">加载失败</div>
                         <div class="fund-code">${code}</div>
                     </div>
-                    <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                    <button class="delete-btn" onclick="removeFund('${code}')" title="删除">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
                 </div>
-                <div class="error-message">${message}</div>
-                <div style="margin-top: 10px;">
-                    <button onclick="fetchFundData('${code}')" style="width: 100%; padding: 10px; background: #667eea;">重新加载</button>
+                <div class="error-state">
+                    <div class="error-message">${message}</div>
+                    <button class="retry-btn" onclick="fetchFundData('${code}')">重新加载</button>
                 </div>
             `;
         }
