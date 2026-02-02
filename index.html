@@ -414,7 +414,18 @@
         function removeFund(code) {
             funds = funds.filter(f => f !== code);
             saveFunds();
-            renderFunds();
+
+            // 只移除对应的卡片，不重新渲染整个列表
+            const card = document.getElementById(`fund-${code}`);
+            if (card) {
+                card.remove();
+            }
+
+            // 如果没有基金了，显示空状态
+            if (funds.length === 0) {
+                const container = document.getElementById('fundList');
+                container.innerHTML = '<div class="empty-state"><p>暂无基金数据，请添加基金代码开始查询</p></div>';
+            }
         }
 
         // 渲染基金列表
