@@ -1082,6 +1082,8 @@
                 changeClass = 'down';
             }
 
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
             card.innerHTML = `
                 <div class="card-header">
                     <div class="fund-info">
@@ -1114,7 +1116,7 @@
                         <span class="secondary-value">${data.jzrq}</span>
                     </div>
                 </div>
-                <div class="update-time">更新于 ${data.gztime}</div>
+                <div class="update-time">更新于 ${data.gztime} · 刷新 ${timeStr}</div>
             `;
 
             // 移除刷新动画类
