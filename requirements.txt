@@ -1,0 +1,2 @@
+# Vercel Python Runtime requirements
+# No additional dependencies needed for this project

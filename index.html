@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基金实时估值查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .disclaimer {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .input-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .auto-refresh input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .fund-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .fund-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .fund-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .fund-card.loading {
+            opacity: 0.6;
+        }
+
+        .fund-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .fund-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .fund-code {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .delete-btn:hover {
+            background: #ee2e3a;
+        }
+
+        .fund-data {
+            margin-top: 15px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .data-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .positive {
+            color: #ff4757;
+        }
+
+        .negative {
+            color: #2ecc71;
+        }
+
+        .neutral {
+            color: #666;
+        }
+
+        .update-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .empty-state {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 16px;
+        }
+
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .popular-funds {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .popular-funds span {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 5px 10px;
+            margin: 5px 5px 0 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .popular-funds span:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .fund-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input[type="text"], button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 基金实时估值查询</h1>
+            <p class="disclaimer">⚠️ 数据来源：天天基金网 | 估值数据仅供参考，不构成投资建议</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="fundCodeInput" placeholder="请输入基金代码（如：161725）" maxlength="6">
+                <button onclick="addFund()">添加基金</button>
+                <button onclick="refreshAll()">刷新全部</button>
+            </div>
+            
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                <label for="autoRefresh">自动刷新（每30秒）</label>
+            </div>
+
+            <div class="popular-funds">
+                <strong>热门基金：</strong>
+                <span onclick="quickAdd('161725')">161725 招商白酒</span>
+                <span onclick="quickAdd('110011')">110011 易方达中小盘</span>
+                <span onclick="quickAdd('000001')">000001 华夏成长</span>
+                <span onclick="quickAdd('320007')">320007 诺安成长</span>
+            </div>
+        </div>
+
+        <div id="fundList" class="fund-list">
+            <div class="empty-state">
+                <p>暂无基金数据，请添加基金代码开始查询</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let funds = [];
+        let autoRefreshInterval = null;
+        const API_BASE = '/api/fund';
+
+        // 从localStorage加载保存的基金列表
+        function loadFunds() {
+            const saved = localStorage.getItem('myFunds');
+            if (saved) {
+                funds = JSON.parse(saved);
+                renderFunds();
+                refreshAll();
+            }
+        }
+
+        // 保存基金列表到localStorage
+        function saveFunds() {
+            localStorage.setItem('myFunds', JSON.stringify(funds));
+        }
+
+        // 添加基金
+        function addFund() {
+            const input = document.getElementById('fundCodeInput');
+            const code = input.value.trim();
+            
+            if (!code) {
+                alert('请输入基金代码');
+                return;
+            }
+
+            if (!/^\d{6}$/.test(code)) {
+                alert('请输入6位数字的基金代码');
+                return;
+            }
+
+            if (funds.includes(code)) {
+                alert('该基金已添加');
+                return;
+            }
+
+            funds.push(code);
+            saveFunds();
+            input.value = '';
+            renderFunds();
+            fetchFundData(code);
+        }
+
+        // 快速添加
+        function quickAdd(code) {
+            if (funds.includes(code)) {
+                alert('该基金已添加');
+                return;
+            }
+            funds.push(code);
+            saveFunds();
+            renderFunds();
+            fetchFundData(code);
+        }
+
+        // 删除基金
+        function removeFund(code) {
+            funds = funds.filter(f => f !== code);
+            saveFunds();
+            renderFunds();
+        }
+
+        // 渲染基金列表
+        function renderFunds() {
+            const container = document.getElementById('fundList');
+            
+            if (funds.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>暂无基金数据，请添加基金代码开始查询</p></div>';
+                return;
+            }
+
+            container.innerHTML = funds.map(code => `
+                <div class="fund-card loading" id="fund-${code}">
+                    <div class="fund-header">
+                        <div>
+                            <div class="fund-name">加载中...</div>
+                            <div class="fund-code">${code}</div>
+                        </div>
+                        <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                    </div>
+                    <div class="fund-data">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取基金数据
+        async function fetchFundData(code) {
+            const card = document.getElementById(`fund-${code}`);
+            if (!card) return;
+
+            try {
+                const response = await fetch(`${API_BASE}?code=${code}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    updateFundCard(code, result.data);
+                } else {
+                    showError(code, result.error || '数据加载失败');
+                }
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showError(code, '网络错误，请稍后重试');
+            }
+        }
+
+        // 更新基金卡片
+        function updateFundCard(code, data) {
+            const card = document.getElementById(`fund-${code}`);
+            if (!card) return;
+
+            card.classList.remove('loading');
+
+            const changePercent = parseFloat(data.gszzl);
+            const changeClass = changePercent > 0 ? 'positive' : changePercent < 0 ? 'negative' : 'neutral';
+            const changeSymbol = changePercent > 0 ? '+' : '';
+
+            card.innerHTML = `
+                <div class="fund-header">
+                    <div>
+                        <div class="fund-name">${data.name}</div>
+                        <div class="fund-code">${data.fundcode}</div>
+                    </div>
+                    <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                </div>
+                <div class="fund-data">
+                    <div class="data-row">
+                        <span class="data-label">估算净值</span>
+                        <span class="data-value ${changeClass}">${data.gsz}</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">估算涨跌</span>
+                        <span class="data-value ${changeClass}">${changeSymbol}${data.gszzl}%</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">昨日净值</span>
+                        <span class="data-value">${data.dwjz}</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">净值日期</span>
+                        <span class="data-value">${data.jzrq}</span>
+                    </div>
+                </div>
+                <div class="update-time">更新时间：${data.gztime}</div>
+            `;
+        }
+
+        // 显示错误
+        function showError(code, message) {
+            const card = document.getElementById(`fund-${code}`);
+            if (!card) return;
+
+            card.classList.remove('loading');
+            card.innerHTML = `
+                <div class="fund-header">
+                    <div>
+                        <div class="fund-name">⚠️ 加载失败</div>
+                        <div class="fund-code">${code}</div>
+                    </div>
+                    <button class="delete-btn" onclick="removeFund('${code}')">删除</button>
+                </div>
+                <div class="error-message">${message}</div>
+                <div style="margin-top: 10px;">
+                    <button onclick="fetchFundData('${code}')" style="width: 100%; padding: 10px; background: #667eea;">重新加载</button>
+                </div>
+            `;
+        }
+
+        // 刷新全部
+        function refreshAll() {
+            funds.forEach(code => fetchFundData(code));
+        }
+
+        // 切换自动刷新
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(refreshAll, 30000);
+                refreshAll();
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        }
+
+        // 回车键添加
+        document.getElementById('fundCodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addFund();
+            }
+        });
+
+        // 页面加载时初始化
+        window.onload = function() {
+            loadFunds();
+        };
+
+        // 页面关闭时清理
+        window.onbeforeunload = function() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        };
+    </script>
+</body>
+</html>
